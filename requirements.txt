@@ -1,0 +1,4 @@
+email_validator==2.2.0
+httpx==0.28.1
+pydantic==2.11.4
+setuptools==80.3.1
