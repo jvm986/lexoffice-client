@@ -1,3 +1,4 @@
+import html
 from typing import Optional, List, Dict, Union
 from uuid import UUID
 import httpx
@@ -68,14 +69,16 @@ class LexofficeClient:
         :return: A list of filtered contacts.
         """
         query_params: Dict[str, Union[str, None]] = {
-            "email": email,
-            "name": name,
+            "email": html.escape(email) if email else None,
+            "name": html.escape(name) if name else None,
             "number": str(number) if number is not None else None,
             "customer": str(customer).lower() if customer is not None else None,
             "vendor": str(vendor).lower() if vendor is not None else None,
         }
         query_params = {k: v for k, v in query_params.items() if v is not None}
-        response = self.client.get(f"/contacts?{urlencode(query_params)}")
+
+        encoded_query = urlencode(query_params)
+        response = self.client.get(f"/contacts?{encoded_query}")
         response.raise_for_status()
         content = response.json().get("content")
         if content is None:
