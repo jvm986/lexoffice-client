@@ -2,15 +2,15 @@ from enum import Enum
 from pydantic import BaseModel, EmailStr as EmailStr
 from uuid import UUID
 
-class Country(str, Enum):
-    DE = 'de'
+class CountryCode(str, Enum):
+    DE = "DE"
 
 class Address(BaseModel):
     suppliment: str | None
     street: str | None
     zip: str | None
     city: str | None
-    country: Country
+    countryCode: CountryCode
 
 class Addresses(BaseModel):
     billing: Address | None
