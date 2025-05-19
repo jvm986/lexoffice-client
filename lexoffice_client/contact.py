@@ -4,8 +4,8 @@ from uuid import UUID
 from pydantic import BaseModel, EmailStr, model_validator
 
 
-class Country(str, Enum):
-    DE = "de"
+class CountryCode(str, Enum):
+    DE = "DE"
 
 
 class Address(BaseModel):
@@ -13,12 +13,12 @@ class Address(BaseModel):
     street: Optional[str] = None
     zip: Optional[str] = None
     city: Optional[str] = None
-    country: Country
+    countryCode: CountryCode
 
 
 class Addresses(BaseModel):
-    billing: Optional[Address] = None
-    shipping: Optional[Address] = None
+    billing: Optional[List[Address]] = None
+    shipping: Optional[List[Address]] = None
 
 
 class CompanyContactPerson(BaseModel):
@@ -68,7 +68,7 @@ class ContactWritable(BaseModel):
     roles: Roles
     company: Optional[Company] = None
     person: Optional[Person] = None
-    addresses: Optional[str] = None
+    addresses: Optional[Addresses] = None
 
     @model_validator(mode="after")
     def check_model(self) -> "ContactWritable":
