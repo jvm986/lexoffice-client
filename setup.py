@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="lexoffice-client",
-    version="0.1.3",
+    version="0.1.4",
     author="James Maguire",
     author_email="jvm986@gmail.com",
     description="A Python client for the Lexoffice API",

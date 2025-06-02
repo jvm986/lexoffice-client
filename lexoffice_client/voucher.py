@@ -7,9 +7,9 @@ from pydantic import BaseModel, model_validator
 
 class VoucherType(str, Enum):
     SALES_INVOICE = "salesinvoice"
-    SALES_CREDIT_NOTE = "salesCreditNote"
-    PURCHASE_INVOICE = "purchaseInvoice"
-    PURCAHSE_CREDIT_NOTE = "purchaseCreditNote"
+    SALES_CREDIT_NOTE = "salescreditnote"
+    PURCHASE_INVOICE = "purchaseinvoice"
+    PURCHASE_CREDIT_NOTE = "purchasecreditnote"
 
 
 class VoucherStatus(str, Enum):

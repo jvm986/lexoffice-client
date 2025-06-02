@@ -1,10 +1,13 @@
 import html
+from pathlib import Path
 from typing import Optional, List, Dict, Union
 from uuid import UUID
 import httpx
 from lexoffice_client.common import CreateResponse
 from lexoffice_client.contact import Contact, ContactWritable
+from lexoffice_client.posting_category import PostingCategoryReadOnly
 from lexoffice_client.voucher import Voucher, VoucherWritable
+from lexoffice_client.file import File, Type
 
 from urllib.parse import urlencode
 
@@ -17,7 +20,6 @@ class LexofficeClient:
             headers={
                 "Authorization": f"Bearer {access_token}",
                 "Accept": "application/json",
-                "Content-Type": "application/json",
             },
             base_url=base_url,
             timeout=10,
@@ -26,7 +28,12 @@ class LexofficeClient:
     def ping(self):
         """Ping Lexoffice API and test the connection."""
         response = self.client.get("/ping")
-        response.raise_for_status()
+        if not response.is_success:
+            raise httpx.HTTPStatusError(
+                f"Error pinging Lexoffice API: {response.status_code} - {response.text}",
+                request=response.request,
+                response=response,
+            )
 
     def create_contact(self, contact: ContactWritable) -> CreateResponse:
         """Create a new contact.
@@ -38,7 +45,14 @@ class LexofficeClient:
         response = self.client.post(
             "/contacts", json=contact.model_dump(exclude_none=True)
         )
-        response.raise_for_status()
+
+        if not response.is_success:
+            raise httpx.HTTPStatusError(
+                f"Error creating contact: {response.status_code} - {response.text}",
+                request=response.request,
+                response=response,
+            )
+
         return CreateResponse.model_validate(response.json())
 
     def retrieve_contact(self, contact_id: UUID) -> Contact:
@@ -48,7 +62,14 @@ class LexofficeClient:
         :return: The retrieved contact as a Contact object.
         """
         response = self.client.get(f"/contacts/{contact_id}")
-        response.raise_for_status()
+
+        if not response.is_success:
+            raise httpx.HTTPStatusError(
+                f"Error retrieving contact: {response.status_code} - {response.text}",
+                request=response.request,
+                response=response,
+            )
+
         return Contact.model_validate(response.json())
 
     def filter_contacts(
@@ -79,11 +100,39 @@ class LexofficeClient:
 
         encoded_query = urlencode(query_params)
         response = self.client.get(f"/contacts?{encoded_query}")
-        response.raise_for_status()
+
+        if not response.is_success:
+            raise httpx.HTTPStatusError(
+                f"Error filtering contacts: {response.status_code} - {response.text}",
+                request=response.request,
+                response=response,
+            )
+
         content = response.json().get("content")
         if content is None:
             raise ValueError("Invalid response format: 'content' key not found.")
         return [Contact.model_validate(contact) for contact in content]
+
+    def retrieve_posting_categories_list(self) -> List[PostingCategoryReadOnly]:
+        """Retrieve a list of posting categories.
+
+        :return: A list of PostingCategoryReadOnly objects.
+        """
+        response = self.client.get("/posting-categories")
+
+        if not response.is_success:
+            raise httpx.HTTPStatusError(
+                f"Error retrieving posting categories: {response.status_code} - {response.text}",
+                request=response.request,
+                response=response,
+            )
+
+        content = response.json()
+        if content is None:
+            raise ValueError("Invalid response format: 'content' key not found.")
+        return [
+            PostingCategoryReadOnly.model_validate(category) for category in content
+        ]
 
     def create_voucher(self, voucher: VoucherWritable) -> CreateResponse:
         """Create a new voucher.
@@ -94,7 +143,14 @@ class LexofficeClient:
         response = self.client.post(
             "/vouchers", json=voucher.model_dump(exclude_none=True, mode="json")
         )
-        response.raise_for_status()
+
+        if not response.is_success:
+            raise httpx.HTTPStatusError(
+                f"Error creating voucher: {response.status_code} - {response.text}",
+                request=response.request,
+                response=response,
+            )
+
         return CreateResponse.model_validate(response.json())
 
     def retrieve_voucher(self, voucher_id: UUID) -> Voucher:
@@ -104,5 +160,42 @@ class LexofficeClient:
         :return: The retrieved voucher as an Invoice object.
         """
         response = self.client.get(f"/vouchers/{voucher_id}")
-        response.raise_for_status()
+
+        if not response.is_success:
+            raise httpx.HTTPStatusError(
+                f"Error retrieving voucher: {response.status_code} - {response.text}",
+                request=response.request,
+                response=response,
+            )
+
         return Voucher.model_validate(response.json())
+
+    def upload_file_to_voucher(
+        self,
+        voucher_id: UUID,
+        file_path: Union[str, Path],
+        upload_type: Type = Type.VOUCHER,
+    ) -> File:
+        file_path = Path(file_path)
+        if not file_path.exists():
+            raise FileNotFoundError(f"File not found: {file_path}")
+        if file_path.stat().st_size > 5 * 1024 * 1024:
+            raise ValueError("File size exceeds the 5MB limit.")
+
+        files = {"file": open(file_path, "rb")}
+        data = {"type": upload_type.value}
+
+        response = self.client.post(
+            f"/vouchers/{voucher_id}/files",
+            files=files,
+            data=data,
+        )
+
+        if not response.is_success:
+            raise httpx.HTTPStatusError(
+                f"Error uploading file: {response.status_code} - {response.text}",
+                request=response.request,
+                response=response,
+            )
+
+        return File.model_validate(response.json())
