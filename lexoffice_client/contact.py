@@ -51,12 +51,6 @@ class Roles(BaseModel):
     customer: Optional[Role] = None
     vendor: Optional[Role] = None
 
-    @model_validator(mode="after")
-    def check_model(self) -> "Roles":
-        if bool(self.customer) == bool(self.vendor):
-            raise ValueError("Exactly one of 'customer' or 'vendor' must be set.")
-        return self
-
 
 class ContactReadOnly(BaseModel):
     id: UUID

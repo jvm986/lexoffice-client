@@ -56,14 +56,9 @@ class VoucherWritable(BaseModel):
     @model_validator(mode="after")
     def check_model(self) -> "VoucherWritable":
         if self.voucherStatus != VoucherStatus.UNCHECKED:
-            if (
-                not self.voucherNumber
-                or not self.voucherDate
-                or not self.totalGrossAmount
-                or not self.totalTaxAmount
-            ):
+            if self.voucherNumber is None or self.voucherDate is None:
                 raise ValueError(
-                    "voucherNumber, voucherDate, totalGrossAmount and totalTaxAmount are required when voucherStatus is not unchecked."
+                    "voucherNumber, voucherDate are required when voucherStatus is not unchecked."
                 )
         if not self.useCollectiveContact:
             if not self.contactId:
