@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="lexoffice-client",
-    version="0.1.5",
+    version="0.2.0",
     author="James Maguire",
     author_email="jvm986@gmail.com",
     description="A Python client for the Lexoffice API",
@@ -12,13 +12,13 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     package_data={
-        "lexoffice_client": ["py.typed", "**/*.pyi"],
+        "lexoffice_client": ["py.typed"],
     },
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=3.6",
+    python_requires=">=3.9",
     install_requires=["email_validator", "httpx", "pydantic"],
 )
